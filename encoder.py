@@ -1,6 +1,5 @@
 import os
 import cv2
-import numpy as np
 import imageio_ffmpeg as ffmpeg
 
 class Encoder:
@@ -33,12 +32,6 @@ class Encoder:
     def calculate_compression_ratio(self, original_size, output_path):
         compressed_size = os.path.getsize(output_path)
         return original_size / compressed_size
-
-
-class H264Encoder(Encoder):
-    def __init__(self, frame_size):
-        super().__init__(frame_size, 'libx264')
-
 
 class H265Encoder(Encoder):
     def __init__(self, frame_size):

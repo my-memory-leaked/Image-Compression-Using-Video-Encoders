@@ -1,8 +1,8 @@
 import os
 from my_image import MyImage
-from encoder import H264Encoder, H265Encoder
+from encoder import H265Encoder
 
-input_image_path = "pictures/1.png"
+input_image_path = "pictures/Canon-5DMarkII-Shotkit-4.CR2"
 output_video_path_h264 = "output/output_video_h264.mp4"
 output_video_path_h265 = "output/output_video_h265.mp4"
 grid_size = 256
@@ -18,17 +18,9 @@ def main():
     
     tiles = image.split_image(grid_size)
     
-    # Calcualte original data size
+    # Calculate original data size
     original_size = sum(tile.nbytes for tile in tiles)
     print(f"Original data size: {original_size} bytes")
-    
-    # H.264 encoding
-    encoder_h264 = H264Encoder(frame_size)
-    encoder_h264.encode_as_video(tiles, output_video_path_h264)
-    if os.path.exists(output_video_path_h264):
-        compression_ratio_h264 = encoder_h264.calculate_compression_ratio(original_size, output_video_path_h264)
-        print(f"Video saved to {output_video_path_h264}")
-        print(f"Compression ratio (H.264): {compression_ratio_h264:.2f}")
 
     # H.265 encoding
     encoder_h265 = H265Encoder(frame_size)
