@@ -4,9 +4,10 @@ import numpy as np
 import imageio_ffmpeg as ffmpeg
 
 class Encoder:
-    def __init__(self, frame_size, codec):
+    def __init__(self, frame_size, codec, extra_options=None):
         self.frame_size = frame_size
         self.codec = codec
+        self.extra_options = extra_options if extra_options else []
 
     def encode_as_video(self, tiles, output_path):
         input_path = 'temp_input_frames'
@@ -18,11 +19,12 @@ class Encoder:
             tile_resized = cv2.resize(tile, (self.frame_size, self.frame_size), interpolation=cv2.INTER_NEAREST)
             cv2.imwrite(f'{input_path}/frame_{i:04d}.png', cv2.cvtColor(tile_resized, cv2.COLOR_RGB2BGR))
 
-        # Use imageio-ffmpeg to encode frames to video
+        # Use imageio-ffmpeg to encode frames to video with extra options
         cmd = [
             ffmpeg.get_ffmpeg_exe(), '-y', '-framerate', '1', '-i',
-            f'{input_path}/frame_%04d.png', '-c:v', self.codec, output_path
-        ]
+            f'{input_path}/frame_%04d.png', '-c:v', self.codec
+        ] + self.extra_options + [output_path]
+        
         os.system(' '.join(cmd))
 
         # Clean up temporary frames
@@ -37,3 +39,7 @@ class Encoder:
 class H265Encoder(Encoder):
     def __init__(self, frame_size):
         super().__init__(frame_size, 'libx265')
+
+class H265LosslessEncoder(Encoder):
+    def __init__(self, frame_size):
+        super().__init__(frame_size, 'libx265', ['-x265-params', 'lossless=1'])
