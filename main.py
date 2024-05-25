@@ -3,13 +3,12 @@ from my_image import MyImage
 from encoder import H265Encoder
 
 input_image_path = "pictures/Canon-5DMarkII-Shotkit-4.CR2"
-output_video_path_h264 = "output/output_video_h264.mp4"
 output_video_path_h265 = "output/output_video_h265.mp4"
 grid_size = 256
 frame_size = 256
 
 def main():
-    output_dir = os.path.dirname(output_video_path_h264)
+    output_dir = os.path.dirname(output_video_path_h265)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     

@@ -1,5 +1,6 @@
 import os
 import cv2
+import numpy as np
 import imageio_ffmpeg as ffmpeg
 
 class Encoder:
@@ -15,7 +16,7 @@ class Encoder:
         # Save tiles as individual frames
         for i, tile in enumerate(tiles):
             tile_resized = cv2.resize(tile, (self.frame_size, self.frame_size), interpolation=cv2.INTER_NEAREST)
-            cv2.imwrite(f'{input_path}/frame_{i:04d}.png', tile_resized)
+            cv2.imwrite(f'{input_path}/frame_{i:04d}.png', cv2.cvtColor(tile_resized, cv2.COLOR_RGB2BGR))
 
         # Use imageio-ffmpeg to encode frames to video
         cmd = [

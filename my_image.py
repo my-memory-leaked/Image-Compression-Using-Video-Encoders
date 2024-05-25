@@ -6,7 +6,7 @@ class MyImage:
         self.path = path
     
     def open(self):
-        return PILImage.open(self.path)
+        return PILImage.open(self.path).convert("RGB")
     
     def show(self):
         image = self.open()
