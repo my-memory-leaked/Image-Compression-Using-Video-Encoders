@@ -26,8 +26,10 @@ def compress_image(lossless=False, transform_name="row_wise", transform=None):
     encoder = encoder_class(frame_size)
     encoder.encode_as_video(tiles, output_path)
     if os.path.exists(output_path):
-        compression_ratio = encoder.calculate_compression_ratio(original_size, output_path)
+        compressed_size = os.path.getsize(output_path)
+        compression_ratio = original_size / compressed_size
         print(f"Video saved to {output_path}")
+        print(f"Compressed size: {compressed_size} bytes")
         print(f"Compression ratio ({'H.265 Lossless' if lossless else 'H.265'}): {compression_ratio:.2f}")
 
 if __name__ == "__main__":
