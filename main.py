@@ -1,17 +1,16 @@
 import os
 from my_image import MyImage
 from encoder import H265Encoder, H265LosslessEncoder
+from transformations import row_wise_transform, spiral_transform, hilbert_transform
 
-# input_image_path = "pictures/Canon-5DMarkII-Shotkit-4.CR2"
 input_image_path = "pictures/2.png"
-
-output_video_path_h265 = "output/output_video_h265.mp4"
-output_video_path_h265_lossless = "output/output_video_h265_lossless.mp4"
+output_video_path_h265 = "output/output_video_h265_{}.mp4"
+output_video_path_h265_lossless = "output/output_video_h265_lossless_{}.mp4"
 grid_size = 256
 frame_size = 256
 
-def compress_image(lossless=False):
-    output_path = output_video_path_h265_lossless if lossless else output_video_path_h265
+def compress_image(lossless=False, transform_name="row_wise", transform=None):
+    output_path = output_video_path_h265_lossless.format(transform_name) if lossless else output_video_path_h265.format(transform_name)
     encoder_class = H265LosslessEncoder if lossless else H265Encoder
 
     output_dir = os.path.dirname(output_path)
@@ -19,14 +18,11 @@ def compress_image(lossless=False):
         os.makedirs(output_dir)
     
     image = MyImage(input_image_path)
-        
-    tiles = image.split_image(grid_size)
+    tiles = image.split_image(grid_size, transform=transform)
     
-    # Calculate original data size
     original_size = sum(tile.nbytes for tile in tiles)
     print(f"Original data size: {original_size} bytes")
 
-    # Encoding
     encoder = encoder_class(frame_size)
     encoder.encode_as_video(tiles, output_path)
     if os.path.exists(output_path):
@@ -35,7 +31,14 @@ def compress_image(lossless=False):
         print(f"Compression ratio ({'H.265 Lossless' if lossless else 'H.265'}): {compression_ratio:.2f}")
 
 if __name__ == "__main__":
-    print("Compressing with H.265 (lossy)...")
-    compress_image(lossless=False)
-    print("\nCompressing with H.265 (lossless)...")
-    compress_image(lossless=True)
+    transformations = {
+        "row_wise": row_wise_transform,
+        "spiral": spiral_transform,
+        "hilbert": hilbert_transform
+    }
+
+    for name, transform in transformations.items():
+        print(f"\nCompressing with H.265 (lossy) using {name} transformation...")
+        compress_image(lossless=False, transform_name=name, transform=transform)
+        print(f"\nCompressing with H.265 (lossless) using {name} transformation...")
+        compress_image(lossless=True, transform_name=name, transform=transform)
