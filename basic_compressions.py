@@ -1,11 +1,35 @@
 from PIL import Image
 import os
+import numpy as np
+from skimage.metrics import peak_signal_noise_ratio as psnr, structural_similarity as ssim
+
+def calculate_metrics(original_image, compressed_image):
+    original_array = np.array(original_image)
+    compressed_array = np.array(compressed_image)
+
+    # Ensure both images have the same size
+    if original_array.shape != compressed_array.shape:
+        compressed_array = np.resize(compressed_array, original_array.shape)
+
+    mse = np.mean((original_array - compressed_array) ** 2)
+    if mse == 0:
+        psnr_value = 100  # Setting a very high PSNR value instead of infinity
+        ssim_value = 1.0
+    else:
+        psnr_value = psnr(original_array, compressed_array)
+        # Determine a suitable win_size
+        win_size = min(original_array.shape[0], original_array.shape[1], 7)
+        ssim_value = ssim(original_array, compressed_array, win_size=win_size, channel_axis=-1)
+    
+    return psnr_value, ssim_value
 
 def compress_image(input_file, output_folder, method='lossless', format='jpeg'):
     os.makedirs(output_folder, exist_ok=True)
     base_name = os.path.basename(input_file).rsplit('.', 1)[0]
     
     with Image.open(input_file) as img:
+        original_image = img.copy()
+        
         if format == 'jpeg':
             if method == 'lossless':
                 output_file = os.path.join(output_folder, f"{base_name}_lossless_jpeg.jpg")
@@ -33,9 +57,19 @@ def compress_image(input_file, output_folder, method='lossless', format='jpeg'):
         
         original_size = os.path.getsize(input_file)
         compressed_size = os.path.getsize(output_file)
-        compression_rate = (original_size - compressed_size) / original_size * 100
+        compression_ratio = original_size / compressed_size
 
-    return output_file, compression_rate
+        with Image.open(output_file) as compressed_img:
+            # Resize compressed image to match original image size if necessary
+            if original_image.size != compressed_img.size:
+                compressed_img = compressed_img.resize(original_image.size)
+            psnr_value, ssim_value = calculate_metrics(original_image, compressed_img)
+        
+        print(f"Compressed {input_file} to {output_file} with {method} {format} compression.")
+        print(f"Original size: {original_size} bytes, Compressed size: {compressed_size} bytes")
+        print(f"Compression ratio: {compression_ratio:.2f}")
+        print(f"PSNR: {psnr_value:.2f}")
+        print(f"SSIM: {ssim_value:.4f}")
 
 # Example usage:
 input_file = 'pictures/2.png'
@@ -46,7 +80,6 @@ methods = ['lossless', 'lossy']
 
 for format in formats:
     for method in methods:
-        output_file, compression_rate = compress_image(input_file, output_folder, method=method, format=format)
-        print(f"Compressed {input_file} to {output_file} with {method} {format} compression. Compression rate: {compression_rate:.2f}%")
+        compress_image(input_file, output_folder, method=method, format=format)
 
 print("Compression completed!")
