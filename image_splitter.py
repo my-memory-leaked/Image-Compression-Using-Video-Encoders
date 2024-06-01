@@ -102,7 +102,7 @@ def slice_image_hilbert(input_image_path, output_folder, tile_size=256):
     y_tiles = (image_height + tile_size - 1) // tile_size
 
     max_tiles = max(x_tiles, y_tiles)
-    curve_order = hilbert_curve(2**(max_tiles.bit_length() - 1))
+    curve_order = hilbert_curve(2**(max_tiles.bit_length()))
 
     tile_number = 0
     for x, y in curve_order:
@@ -113,9 +113,14 @@ def slice_image_hilbert(input_image_path, output_folder, tile_size=256):
         right = min(left + tile_size, image_width)
         bottom = min(top + tile_size, image_height)
 
+        if left >= image_width or top >= image_height:
+            continue
+
         tile = image.crop((left, top, right, bottom))
         tile.save(os.path.join(output_path, f"tile_{tile_number}.png"))
         tile_number += 1
+        if tile_number >= x_tiles * y_tiles:
+            break
 
     print(f"Sliced image into {tile_number} tiles and saved to '{output_path}' folder.")
 
