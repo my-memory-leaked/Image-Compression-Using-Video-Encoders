@@ -77,6 +77,48 @@ def slice_image_spiral(input_image_path, output_folder, tile_size=256):
 
     print(f"Sliced image into {tile_number} tiles and saved to '{output_path}' folder.")
 
+def hilbert_curve(n):
+    """ Generate Hilbert curve points for a grid of size n x n. """
+    def hilbert(x, y, xi, xj, yi, yj, n):
+        if n <= 0:
+            yield x + (xi + yi) // 2, y + (xj + yj) // 2
+        else:
+            yield from hilbert(x, y, yi // 2, yj // 2, xi // 2, xj // 2, n - 1)
+            yield from hilbert(x + xi // 2, y + xj // 2, xi // 2, xj // 2, yi // 2, yj // 2, n - 1)
+            yield from hilbert(x + xi // 2 + yi // 2, y + xj // 2 + yj // 2, xi // 2, xj // 2, yi // 2, yj // 2, n - 1)
+            yield from hilbert(x + xi // 2 + yi, y + xj // 2 + yj, -yi // 2, -yj // 2, -xi // 2, -xj // 2, n - 1)
+    
+    return list(hilbert(0, 0, n, 0, 0, n, int(n).bit_length() - 1))
+
+def slice_image_hilbert(input_image_path, output_folder, tile_size=256):
+    output_path = os.path.join(output_folder, 'hilbert')
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
+    image = Image.open(input_image_path)
+    image_width, image_height = image.size
+
+    x_tiles = (image_width + tile_size - 1) // tile_size
+    y_tiles = (image_height + tile_size - 1) // tile_size
+
+    max_tiles = max(x_tiles, y_tiles)
+    curve_order = hilbert_curve(2**(max_tiles.bit_length() - 1))
+
+    tile_number = 0
+    for x, y in curve_order:
+        if x >= x_tiles or y >= y_tiles:
+            continue
+        left = x * tile_size
+        top = y * tile_size
+        right = min(left + tile_size, image_width)
+        bottom = min(top + tile_size, image_height)
+
+        tile = image.crop((left, top, right, bottom))
+        tile.save(os.path.join(output_path, f"tile_{tile_number}.png"))
+        tile_number += 1
+
+    print(f"Sliced image into {tile_number} tiles and saved to '{output_path}' folder.")
+
 # Użycie funkcji:
 input_image_path = 'pictures/PIA04230.tif'  # Zastąp 'path_to_your_image.png' ścieżką do swojego obrazu
 output_folder = 'output'
@@ -84,6 +126,7 @@ output_folder = 'output'
 # Wyczyszczenie folderu output przed przetwarzaniem
 clear_output_folder(output_folder)
 
-# Wywołanie obu funkcji
+# Wywołanie wszystkich funkcji
 slice_image(input_image_path, output_folder)  # Wywołanie funkcji dzielącej obraz rząd po rzędzie
 slice_image_spiral(input_image_path, output_folder)  # Wywołanie funkcji dzielącej obraz spiralnie
+slice_image_hilbert(input_image_path, output_folder)  # Wywołanie funkcji dzielącej obraz krzywą Hilberta
