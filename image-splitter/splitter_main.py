@@ -18,10 +18,27 @@ def run_image_splitter(input_image_path, output_folder):
     # Wyczyszczenie folderu output przed przetwarzaniem
     clear_output_folder(output_folder)
 
+    # Wyświetlanie rozmiaru oryginalnego obrazu
+    original_size = os.path.getsize(input_image_path)
+    print(f"Original image size: {original_size} bytes")
+
     # Wywołanie wszystkich funkcji
-    slice_image_row_by_row(input_image_path, output_folder)  # Wywołanie funkcji dzielącej obraz rząd po rzędzie
-    slice_image_spiral(input_image_path, output_folder)  # Wywołanie funkcji dzielącej obraz spiralnie
-    slice_image_hilbert(input_image_path, output_folder)  # Wywołanie funkcji dzielącej obraz krzywą Hilberta
+    slice_image_row_by_row(input_image_path, output_folder)
+    slice_image_spiral(input_image_path, output_folder)
+    slice_image_hilbert(input_image_path, output_folder)
+
+    # Wyświetlanie rozmiaru podzielonych kafelków
+    total_tile_size = get_total_tile_size(output_folder)
+    print(f"Total size of all tiles: {total_tile_size} bytes")
+
+def get_total_tile_size(output_folder):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(output_folder):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            if os.path.exists(fp):
+                total_size += os.path.getsize(fp)
+    return total_size
 
 if __name__ == "__main__":
     # Brak domyślnych wartości

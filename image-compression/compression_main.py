@@ -4,6 +4,8 @@ import subprocess
 import importlib.util
 
 # Dodanie ścieżki do modułu image-splitter
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../image-splitter')))
+
 splitter_main_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../image-splitter/splitter_main.py'))
 if not os.path.exists(splitter_main_path):
     print(f"File not found: {splitter_main_path}")
@@ -31,11 +33,12 @@ def get_folder_size(folder):
     for dirpath, dirnames, filenames in os.walk(folder):
         for f in filenames:
             fp = os.path.join(dirpath, f)
-            total_size += os.path.getsize(fp)
+            if os.path.exists(fp):  # Upewnij się, że plik istnieje
+                total_size += os.path.getsize(fp)
     return total_size
 
 def main():
-    input_image_path = '../pictures/PIA04230.tif'  # Zaktualizowana ścieżka do obrazu
+    input_image_path = '../pictures/PIA04230.tif'
     output_folder = '../output'
 
     # Uruchomienie image_splitter z przekazanymi ścieżkami
@@ -57,9 +60,14 @@ def main():
             compress_image(input_folder, output_file, lossless=not lossy)
 
             # Calculate compression ratio
-            original_size = get_folder_size(input_folder)
+            original_size = os.path.getsize(input_image_path)
             compressed_size = os.path.getsize(output_file)
-            compression_ratio = original_size / compressed_size if compressed_size != 0 else float('inf')
+            print(f"Original size for {transform} ({mode}): {original_size} bytes")
+            print(f"Compressed size for {transform} ({mode}): {compressed_size} bytes")
+            if compressed_size != 0:
+                compression_ratio = original_size / compressed_size
+            else:
+                compression_ratio = float('inf')
             print(f"Compression ratio for {transform} ({mode}): {compression_ratio:.2f}")
 
 if __name__ == "__main__":
