@@ -7,7 +7,7 @@ from utils.hilbert import slice_image_hilbert
 
 def main():
     input_image_path = '../pictures/PIA04230.tif'  # Zaktualizowana ścieżka do obrazu
-    output_folder = 'output'
+    output_folder = '../output'
 
     # Sprawdzenie, czy plik obrazu istnieje
     if not os.path.exists(input_image_path):
