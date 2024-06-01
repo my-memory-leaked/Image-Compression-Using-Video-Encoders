@@ -1,14 +1,15 @@
 import os
 import sys
+
+# Dodanie ścieżki do modułu utils
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '')))
+
 from utils.helper import clear_output_folder
 from utils.row_by_row import slice_image_row_by_row
 from utils.spiral import slice_image_spiral
 from utils.hilbert import slice_image_hilbert
 
-def main():
-    input_image_path = '../pictures/PIA04230.tif'  # Zaktualizowana ścieżka do obrazu
-    output_folder = '../output'
-
+def run_image_splitter(input_image_path, output_folder):
     # Sprawdzenie, czy plik obrazu istnieje
     if not os.path.exists(input_image_path):
         print(f"File not found: {input_image_path}")
@@ -23,4 +24,5 @@ def main():
     slice_image_hilbert(input_image_path, output_folder)  # Wywołanie funkcji dzielącej obraz krzywą Hilberta
 
 if __name__ == "__main__":
-    main()
+    # Brak domyślnych wartości
+    print("This script is intended to be imported and called from another script.")
