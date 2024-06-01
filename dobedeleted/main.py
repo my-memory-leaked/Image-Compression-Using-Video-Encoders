@@ -1,3 +1,4 @@
+# main.py
 import os
 import shutil
 from my_image import MyImage

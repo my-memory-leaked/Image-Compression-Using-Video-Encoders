@@ -1,3 +1,4 @@
+# my_image.py
 import os
 import numpy as np
 import cv2
@@ -29,6 +30,12 @@ class MyImage:
                 
                 # Extract the tile
                 tile = self.image[start_y:end_y, start_x:end_x]
+                
+                # Ensure the tile is the correct size (padding if necessary)
+                if tile.shape[0] < grid_size or tile.shape[1] < grid_size:
+                    pad_height = grid_size - tile.shape[0]
+                    pad_width = grid_size - tile.shape[1]
+                    tile = np.pad(tile, ((0, pad_height), (0, pad_width), (0, 0)), mode='constant', constant_values=0)
                 
                 # Apply the transformation if one is provided
                 if transform:

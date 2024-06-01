@@ -92,7 +92,7 @@ def decode_video(video_path, frame_size, grid_size, original_image_path, output_
     print(f"SSIM: {ssim_value}")
 
 if __name__ == "__main__":
-    video_path = "output/output_video_h265.mp4"
+    video_path = "output/output_video_h265_row_wise.mp4"
     output_image_path = "output/reconstructed_image.png"
     frame_size = 256
     grid_size = 256  # Same as the one used in encoding
