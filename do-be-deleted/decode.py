@@ -13,7 +13,7 @@ def read_image(image_path):
     else:
         return cv2.imread(image_path)
 
-def decode_video(video_path, frame_size, grid_size, original_image_path, output_image_path):
+def decode_video(video_path, frame_size, original_image_path, output_image_path):
     # Get the size of the original image
     original_img = read_image(original_image_path)
     if original_img is None:
@@ -24,8 +24,11 @@ def decode_video(video_path, frame_size, grid_size, original_image_path, output_
         original_image = Image.open(original_image_path)
         original_width, original_height = original_image.size
 
-    padded_height = (original_height // grid_size + 1) * grid_size
-    padded_width = (original_width // grid_size + 1) * grid_size
+    num_tiles_vertical = (original_height + frame_size - 1) // frame_size
+    num_tiles_horizontal = (original_width + frame_size - 1) // frame_size
+
+    padded_height = num_tiles_vertical * frame_size
+    padded_width = num_tiles_horizontal * frame_size
 
     cap = cv2.VideoCapture(video_path)
     
@@ -41,22 +44,16 @@ def decode_video(video_path, frame_size, grid_size, original_image_path, output_
     if not frames:
         raise ValueError("No frames extracted from the video.")
 
-    # Calculate the number of tiles in the padded image
-    num_tiles_vertical = padded_height // grid_size
-    num_tiles_horizontal = padded_width // grid_size
-
-    print(f"Padded image shape: ({padded_height}, {padded_width})")
-    print(f"Number of tiles - Vertical: {num_tiles_vertical}, Horizontal: {num_tiles_horizontal}")
-    print(f"Number of frames extracted: {len(frames)}")
+    if len(frames) != num_tiles_vertical * num_tiles_horizontal:
+        print(f"Warning: Number of frames ({len(frames)}) does not match grid size ({num_tiles_vertical * num_tiles_horizontal}).")
 
     # Create a blank image
-    reconstructed_image = np.zeros((num_tiles_vertical * frame_size, num_tiles_horizontal * frame_size, 3), dtype=np.uint8)
+    reconstructed_image = np.zeros((padded_height, padded_width, 3), dtype=np.uint8)
 
     # Place each frame into the reconstructed image
     for i, frame in enumerate(frames):
         row = (i // num_tiles_horizontal) * frame_size
         col = (i % num_tiles_horizontal) * frame_size
-        print(f"Placing frame {i} at row {row}, col {col}")
         reconstructed_image[row:row+frame_size, col:col+frame_size] = frame
 
     # Crop the reconstructed image to the original dimensions
@@ -92,11 +89,10 @@ def decode_video(video_path, frame_size, grid_size, original_image_path, output_
     print(f"SSIM: {ssim_value}")
 
 if __name__ == "__main__":
-    video_path = "output/output_video_h265_row_wise.mp4"
-    output_image_path = "output/reconstructed_image.png"
+    video_path = "../output/output_row_by_row_lossless.hevc"
+    output_image_path = "../output/reconstructed_image_row_by_row_lossless.png"
     frame_size = 256
-    grid_size = 256  # Same as the one used in encoding
-    original_image_path = "pictures/2.png"
+    original_image_path = "../pictures/10.png"
     # original_image_path = "pictures/Canon-5DMarkII-Shotkit-4.CR2"
 
-    decode_video(video_path, frame_size, grid_size, original_image_path, output_image_path)
+    decode_video(video_path, frame_size, original_image_path, output_image_path)
