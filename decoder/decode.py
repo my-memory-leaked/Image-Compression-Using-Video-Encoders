@@ -92,7 +92,6 @@ if __name__ == "__main__":
     video_path = "../output/output_row_by_row_lossless.hevc"
     output_image_path = "../output/reconstructed_image_row_by_row_lossless.png"
     frame_size = 256
-    original_image_path = "../pictures/10.png"
-    # original_image_path = "pictures/Canon-5DMarkII-Shotkit-4.CR2"
+    original_image_path = "../pictures/sunflower-field.bmp"
 
     decode_video(video_path, frame_size, original_image_path, output_image_path)
