@@ -2,6 +2,17 @@ import os
 import sys
 import subprocess
 import importlib.util
+from PIL import Image
+
+def get_image_resolution(input_folder, image_template):
+    # Construct the path to the first image (e.g., tile_0.png)
+    first_image_path = os.path.join(input_folder, image_template % 0)
+
+    # Open the image
+    with Image.open(first_image_path) as img:
+        width, height = img.size
+
+    return width, height
 
 # Dodanie ścieżki do modułu image-splitter
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../image-splitter')))
@@ -15,8 +26,9 @@ spec = importlib.util.spec_from_file_location("splitter_main", splitter_main_pat
 splitter_main = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(splitter_main)
 
-def compress_image(input_folder, output_file, lossless=True):
+def compress_image(input_folder, output_file, lossless=False):
     crf_value = 0 if lossless else 28  # CRF 0 means lossless, 28 is a good tradeoff for lossy
+    ## H265
     # command = [
     #     'ffmpeg',
     #     '-y',  # Overwrite output files without asking
@@ -26,16 +38,57 @@ def compress_image(input_folder, output_file, lossless=True):
     #     '-x265-params', f'crf={crf_value}',  # CRF value for compression
     #     output_file  # Output file
     # ]
-    # 264
+
+    ## H264
+    # command = [
+    #     'ffmpeg',
+    #     '-y',  # Overwrite output files without asking
+    #     '-i', os.path.join(input_folder, 'tile_%d.png'),  # Input pattern
+    #     '-c:v', 'libx264',  # Codec
+    #     '-preset', 'fast',  # Encoding speed (tradeoff between speed and compression)
+    #     '-x264-params', f'crf={crf_value}',  # CRF value for compression
+    #     output_file  # Output file
+    # ]
+
+    ### H266
+    ## Lossless
+    # resolution = get_image_resolution(input_folder, 'tile_%d.png')
+    # source_width, source_height = resolution
+
+    # # Convert PNG images to YUV file
+    # yuv_file = os.path.join(input_folder, 'input.yuv')
+    # ffmpeg_command = [
+    #     'ffmpeg',
+    #     '-framerate', str(30),
+    #     '-i', os.path.join(input_folder, 'tile_%d.png'),
+    #     '-pix_fmt', 'yuv420p',
+    #     yuv_file
+    # ]
+    # subprocess.run(ffmpeg_command, check=True)
+
+    # command = [
+    #     '/home/szymon/Documents/NT/vvc/vvenc/bin/release-shared/vvencFFapp',
+    #     '-i', yuv_file,
+    #     '--CostMode', 'lossless',
+    #     '--SourceWidth', str(source_width),
+    #     '--SourceHeight', str(source_height),
+    #     '-fr', str(30),
+    #     '-t', '16',
+    #     '-b', output_file
+    # ]
+
+    ## Lossy
     command = [
         'ffmpeg',
-        '-y',  # Overwrite output files without asking
-        '-i', os.path.join(input_folder, 'tile_%d.png'),  # Input pattern
-        '-c:v', 'libx264',  # Codec
-        '-preset', 'fast',  # Encoding speed (tradeoff between speed and compression)
-        '-x264-params', f'crf={crf_value}',  # CRF value for compression
-        output_file  # Output file
+        '-y',
+        '-i', os.path.join(input_folder, 'tile_%d.png'),
+        '-c:v', 'libvvenc',
+        '-preset', 'fast',
+        '--qp', '1',
+        '-t', '16',
+        output_file
     ]
+
     subprocess.run(command, check=True)
 
 def get_folder_size(folder):
@@ -69,14 +122,20 @@ def main():
 
                 # for lossy in [True, False]:
                 # only lossless
-                for lossy in [False]:
+                for lossy in [True]:
                     mode = "lossless" if not lossy else "lossy"
+                    ## H265
                     # output_file = os.path.join(output_folder, f'output_{transform}_{mode}.hevc')
-                    # 264
-                    output_file = os.path.join(output_folder, f'output_{transform}_{mode}.mp4')
+                    # print(f"\nCompressing with H.265 ({mode}) using {transform} transformation...")
 
+                    ## H264
+                    # output_file = os.path.join(output_folder, f'output_{transform}_{mode}.mp4')
+                    # print(f"\nCompressing with H.264 ({mode}) using {transform} transformation...")
 
-                    print(f"\nCompressing with H.265 ({mode}) using {transform} transformation...")
+                    ## H266
+                    output_file = os.path.join(output_folder, f'output_{transform}_{mode}.vvc')
+                    print(f"\nCompressing with H.266 ({mode}) using {transform} transformation...")
+
                     compress_image(input_folder, output_file, lossless=not lossy)
 
                     # Calculate compression ratio
@@ -93,7 +152,6 @@ def main():
                     f = open("../../results.txt", 'a')
                     f.write(f"{path}  transform: {transform} compression: {compression_ratio:.3f}\n")
                     f.close()
-
 
 if __name__ == "__main__":
     main()

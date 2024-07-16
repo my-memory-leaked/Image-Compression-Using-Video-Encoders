@@ -1,4 +1,5 @@
 import os
+import subprocess
 import cv2
 import numpy as np
 from PIL import Image
@@ -30,15 +31,22 @@ def decode_video(video_path, frame_size, original_image_path, output_image_path)
     padded_height = num_tiles_vertical * frame_size
     padded_width = num_tiles_horizontal * frame_size
 
-    cap = cv2.VideoCapture(video_path)
-    
+    decode_command = [
+        '/home/szymon/Documents/NT/vvdec/bin/release-static/vvdecapp',
+        '-b', os.path.join(video_path),
+        '-o', 'video.yuv'
+    ]
+    subprocess.run(decode_command, check=True)
+
+    cap = cv2.VideoCapture('video.yuv')
+
     frames = []
     while True:
         ret, frame = cap.read()
         if not ret:
             break
         frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-    
+
     cap.release()
 
     if not frames:
@@ -70,11 +78,11 @@ def decode_video(video_path, frame_size, original_image_path, output_image_path)
 
     # Calculate PSNR and SSIM
     psnr_value = compare_psnr(original_img, reconstructed_img)
-    
+
     # Calculate a suitable win_size
     min_dim = min(original_img.shape[0], original_img.shape[1], reconstructed_img.shape[0], reconstructed_img.shape[1])
     win_size = min(7, min_dim)
-    
+
     # Ensure win_size is odd and less than or equal to the smallest image dimension
     if win_size % 2 == 0:
         win_size -= 1
@@ -87,6 +95,8 @@ def decode_video(video_path, frame_size, original_image_path, output_image_path)
 
     print(f"PSNR: {psnr_value}")
     print(f"SSIM: {ssim_value}")
+
+    return psnr_value, ssim_value
 
 if __name__ == "__main__":
     video_path = "../output/output_row_by_row_lossless.hevc"

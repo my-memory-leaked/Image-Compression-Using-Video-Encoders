@@ -20,7 +20,7 @@ def run_image_splitter(input_image_path, output_folder):
 
     # Wyświetlanie rozmiaru oryginalnego obrazu
     original_size = os.path.getsize(input_image_path)
-    print(f"Original image size: {original_size} bytes")
+    print(f"Original {input_image_path} size: {original_size} bytes")
 
     # Wywołanie wszystkich funkcji
     slice_image_row_by_row(input_image_path, output_folder)
