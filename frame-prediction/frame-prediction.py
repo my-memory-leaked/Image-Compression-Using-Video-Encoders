@@ -52,7 +52,7 @@ image_folder = '../pictures'
 images = load_and_resize_images_from_folder(image_folder)
 
 # Różne długości sekwencji do testowania
-for total_length in [125]:
+for total_length in [250]:
     # Generowanie i kompresowanie sekwencji
     folder_name = f'sequence_from_images_{total_length}'
     frame_paths = save_frame_sequence(generate_frame_sequence(images, total_length), folder_name)
