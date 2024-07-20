@@ -27,7 +27,7 @@ def run_image_splitter(input_image_path, output_folder):
     slice_image_row_by_row(input_image_path, output_folder)
     slice_image_spiral(input_image_path, output_folder)
     slice_image_hilbert(input_image_path, output_folder)
-    slice_image_column_by_column(input_image_path, output_folder)  # New call
+    slice_image_column_by_column(input_image_path, output_folder)  
 
     # Display the size of the split tiles
     total_tile_size = get_total_tile_size(output_folder)
