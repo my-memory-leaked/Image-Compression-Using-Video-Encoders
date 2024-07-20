@@ -54,6 +54,14 @@ def decode_video(video_path, frame_size, original_image_path, output_image_path)
     for i, frame in enumerate(frames):
         col = (i // num_tiles_vertical) * frame_size
         row = (i % num_tiles_vertical) * frame_size
+
+        # Check if the slice dimensions match
+        if frame.shape[0] != frame_size or frame.shape[1] != frame_size:
+            raise ValueError(f"Frame at index {i} does not match frame size: {frame.shape} != {(frame_size, frame_size)}")
+
+        if col + frame_size > padded_width or row + frame_size > padded_height:
+            raise ValueError(f"Frame at index {i} exceeds reconstructed image dimensions.")
+
         reconstructed_image[row:row+frame_size, col:col+frame_size] = frame
 
     # Crop the reconstructed image to the original dimensions
@@ -92,6 +100,6 @@ if __name__ == "__main__":
     video_path = "../output/output_column_by_column_lossless.hevc"
     output_image_path = "../output/reconstructed_image_column_by_column_lossless.png"
     frame_size = 256
-    original_image_path = "../pictures/14.png"
+    original_image_path = "../pictures/sunflower-field.bmp"
 
     decode_video(video_path, frame_size, original_image_path, output_image_path)
