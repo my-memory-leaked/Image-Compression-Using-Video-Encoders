@@ -1,6 +1,7 @@
 from PIL import Image
 import os
 import numpy as np
+import pandas as pd
 from skimage.metrics import peak_signal_noise_ratio as psnr, structural_similarity as ssim
 
 def calculate_metrics(original_image, compressed_image):
@@ -65,21 +66,38 @@ def compress_image(input_file, output_folder, method='lossless', format='jpeg'):
                 compressed_img = compressed_img.resize(original_image.size)
             psnr_value, ssim_value = calculate_metrics(original_image, compressed_img)
         
-        print(f"Compressed {input_file} to {output_file} with {method} {format} compression.")
-        print(f"Original size: {original_size} bytes, Compressed size: {compressed_size} bytes")
-        print(f"Compression ratio: {compression_ratio:.2f}")
-        print(f"PSNR: {psnr_value:.2f}")
-        print(f"SSIM: {ssim_value:.4f}")
+        result = {
+            "File": output_file,
+            "Original Size (bytes)": original_size,
+            "Compressed Size (bytes)": compressed_size,
+            "Compression Ratio": compression_ratio,
+            "PSNR": psnr_value,
+            "SSIM": ssim_value
+        }
+        
+        return result
 
 # Example usage:
-input_file = 'pictures/2.png'
+input_file = '../pictures/2.png'
 output_folder = 'output'
+result_file = 'results.txt'
 
 formats = ['jpeg', 'png', 'jpeg2000']
 methods = ['lossless', 'lossy']
 
+# Clear the results file before writing new results
+with open(result_file, 'w') as f:
+    f.write("")
+
+results = []
+
 for format in formats:
     for method in methods:
-        compress_image(input_file, output_folder, method=method, format=format)
+        result = compress_image(input_file, output_folder, method=method, format=format)
+        results.append(result)
+
+# Convert results to DataFrame and save to results.txt
+df = pd.DataFrame(results)
+df.to_csv(result_file, index=False, sep='\t')
 
 print("Compression completed!")

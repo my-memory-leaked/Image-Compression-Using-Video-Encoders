@@ -1,5 +1,4 @@
 import os
-import subprocess
 import cv2
 import numpy as np
 from PIL import Image
@@ -31,22 +30,15 @@ def decode_video(video_path, frame_size, original_image_path, output_image_path)
     padded_height = num_tiles_vertical * frame_size
     padded_width = num_tiles_horizontal * frame_size
 
-    decode_command = [
-        '/home/szymon/Documents/NT/vvdec/bin/release-static/vvdecapp',
-        '-b', os.path.join(video_path),
-        '-o', 'video.yuv'
-    ]
-    subprocess.run(decode_command, check=True)
-
-    cap = cv2.VideoCapture('video.yuv')
-
+    cap = cv2.VideoCapture(video_path)
+    
     frames = []
     while True:
         ret, frame = cap.read()
         if not ret:
             break
         frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-
+    
     cap.release()
 
     if not frames:
@@ -58,10 +50,18 @@ def decode_video(video_path, frame_size, original_image_path, output_image_path)
     # Create a blank image
     reconstructed_image = np.zeros((padded_height, padded_width, 3), dtype=np.uint8)
 
-    # Place each frame into the reconstructed image
+    # Place each frame into the reconstructed image column by column
     for i, frame in enumerate(frames):
-        row = (i // num_tiles_horizontal) * frame_size
-        col = (i % num_tiles_horizontal) * frame_size
+        col = (i // num_tiles_vertical) * frame_size
+        row = (i % num_tiles_vertical) * frame_size
+
+        # Check if the slice dimensions match
+        if frame.shape[0] != frame_size or frame.shape[1] != frame_size:
+            raise ValueError(f"Frame at index {i} does not match frame size: {frame.shape} != {(frame_size, frame_size)}")
+
+        if col + frame_size > padded_width or row + frame_size > padded_height:
+            raise ValueError(f"Frame at index {i} exceeds reconstructed image dimensions.")
+
         reconstructed_image[row:row+frame_size, col:col+frame_size] = frame
 
     # Crop the reconstructed image to the original dimensions
@@ -78,11 +78,11 @@ def decode_video(video_path, frame_size, original_image_path, output_image_path)
 
     # Calculate PSNR and SSIM
     psnr_value = compare_psnr(original_img, reconstructed_img)
-
+    
     # Calculate a suitable win_size
     min_dim = min(original_img.shape[0], original_img.shape[1], reconstructed_img.shape[0], reconstructed_img.shape[1])
     win_size = min(7, min_dim)
-
+    
     # Ensure win_size is odd and less than or equal to the smallest image dimension
     if win_size % 2 == 0:
         win_size -= 1
@@ -96,13 +96,10 @@ def decode_video(video_path, frame_size, original_image_path, output_image_path)
     print(f"PSNR: {psnr_value}")
     print(f"SSIM: {ssim_value}")
 
-    return psnr_value, ssim_value
-
 if __name__ == "__main__":
-    video_path = "../output/output_row_by_row_lossless.hevc"
-    output_image_path = "../output/reconstructed_image_row_by_row_lossless.png"
+    video_path = "../output/output_column_by_column_lossless.hevc"
+    output_image_path = "../output/reconstructed_image_column_by_column_lossless.png"
     frame_size = 256
-    original_image_path = "../pictures/10.png"
-    # original_image_path = "pictures/Canon-5DMarkII-Shotkit-4.CR2"
+    original_image_path = "../pictures/sunflower-field.bmp"
 
     decode_video(video_path, frame_size, original_image_path, output_image_path)
