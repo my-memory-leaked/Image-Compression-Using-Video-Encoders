@@ -17,15 +17,15 @@ spec.loader.exec_module(splitter_main)
 
 def compress_image(input_folder, output_file, lossless=True, crf = 28):
     crf_value = 0 if lossless else crf  # CRF 0 means lossless, 28 is a good tradeoff for lossy
-    command = [
-        'ffmpeg',
-        '-y',  # Overwrite output files without asking
-        '-i', os.path.join(input_folder, 'tile_%d.png'),  # Input pattern
-        '-c:v', 'libx265',  # Codec
-        '-preset', 'fast',  # Encoding speed (tradeoff between speed and compression)
-        '-x265-params', f'crf={crf_value}',  # CRF value for compression
-        output_file  # Output file
-    ]
+    # command = [
+    #     'ffmpeg',
+    #     '-y',  # Overwrite output files without asking
+    #     '-i', os.path.join(input_folder, 'tile_%d.png'),  # Input pattern
+    #     '-c:v', 'libx265',  # Codec
+    #     '-preset', 'fast',  # Encoding speed (tradeoff between speed and compression)
+    #     '-x265-params', f'crf={crf_value}',  # CRF value for compression
+    #     output_file  # Output file
+    # ]
     # 264
     # command = [
     #     'ffmpeg',
@@ -36,6 +36,45 @@ def compress_image(input_folder, output_file, lossless=True, crf = 28):
     #     '-x264-params', f'crf={crf_value}',  # CRF value for compression
     #     output_file  # Output file
     # ]
+
+    ### H266
+    ## Lossless
+    # resolution = get_image_resolution(input_folder, 'tile_%d.png')
+    # source_width, source_height = resolution
+
+    # # Convert PNG images to YUV file
+    # yuv_file = os.path.join(input_folder, 'input.yuv')
+    # ffmpeg_command = [
+    #     'ffmpeg',
+    #     '-framerate', str(30),
+    #     '-i', os.path.join(input_folder, 'tile_%d.png'),
+    #     '-pix_fmt', 'yuv420p',
+    #     yuv_file
+    # ]
+    # subprocess.run(ffmpeg_command, check=True)
+
+    # command = [
+    #     '/home/szymon/Documents/NT/vvc/vvenc/bin/release-shared/vvencFFapp',
+    #     '-i', yuv_file,
+    #     '--CostMode', 'lossless',
+    #     '--SourceWidth', str(source_width),
+    #     '--SourceHeight', str(source_height),
+    #     '-fr', str(30),
+    #     '-t', '16',
+    #     '-b', output_file
+    # ]
+
+    ## Lossy
+    command = [
+        'ffmpeg',
+        '-y',
+        '-i', os.path.join(input_folder, 'tile_%d.png'),
+        '-c:v', 'libvvenc',
+        '-preset', 'fast',
+        '--qp', '1',
+        '-t', '16',
+        output_file
+    ]
     subprocess.run(command, check=True)
 
 def get_folder_size(folder):
@@ -51,7 +90,7 @@ def main():
     output_folder = '../output'
     path = '../pictures/Canon-5DMarkII-Shotkit-4.CR2'
     crf = 0
-    
+
     splitter_main.run_image_splitter(path, output_folder)
 
     transformations = ['row_by_row', 'column_by_column', 'spiral', 'hilbert']

@@ -21,16 +21,16 @@ def calculate_metrics(original_image, compressed_image):
         # Determine a suitable win_size
         win_size = min(original_array.shape[0], original_array.shape[1], 7)
         ssim_value = ssim(original_array, compressed_array, win_size=win_size, channel_axis=-1)
-    
+
     return psnr_value, ssim_value
 
 def compress_image(input_file, output_folder, method='lossless', format='jpeg'):
     os.makedirs(output_folder, exist_ok=True)
     base_name = os.path.basename(input_file).rsplit('.', 1)[0]
-    
+
     with Image.open(input_file) as img:
         original_image = img.copy()
-        
+
         if format == 'jpeg':
             if method == 'lossless':
                 output_file = os.path.join(output_folder, f"{base_name}_lossless_jpeg.jpg")
@@ -55,7 +55,7 @@ def compress_image(input_file, output_folder, method='lossless', format='jpeg'):
                 img.save(output_file, 'JPEG2000', quality_layers=[20])  # Adjust layers for desired compression
         else:
             raise ValueError("Unsupported format")
-        
+
         original_size = os.path.getsize(input_file)
         compressed_size = os.path.getsize(output_file)
         compression_ratio = original_size / compressed_size
@@ -65,7 +65,7 @@ def compress_image(input_file, output_folder, method='lossless', format='jpeg'):
             if original_image.size != compressed_img.size:
                 compressed_img = compressed_img.resize(original_image.size)
             psnr_value, ssim_value = calculate_metrics(original_image, compressed_img)
-        
+
         result = {
             "File": output_file,
             "Original Size (bytes)": original_size,
@@ -74,13 +74,13 @@ def compress_image(input_file, output_folder, method='lossless', format='jpeg'):
             "PSNR": psnr_value,
             "SSIM": ssim_value
         }
-        
+
         return result
 
 # Example usage:
-input_file = '../pictures/2.png'
-output_folder = 'output'
-result_file = 'results.txt'
+input_file = '/mnt/c/Users/Szymon/OneDrive - Politechnika Śląska/Magister/SEM1/NTwI/pictures/2.png'
+output_folder = '/mnt/e/output'
+result_file = '/mnt/e/results.txt'
 
 formats = ['jpeg', 'png', 'jpeg2000']
 methods = ['lossless', 'lossy']
