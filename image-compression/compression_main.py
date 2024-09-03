@@ -16,17 +16,19 @@ splitter_main = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(splitter_main)
 
 def compress_image(input_folder, output_file, lossless=True, crf = 28):
-    crf_value = 0 if lossless else crf  # CRF 0 means lossless, 28 is a good tradeoff for lossy
-    command = [
-        'ffmpeg',
-        '-y',  # Overwrite output files without asking
-        '-i', os.path.join(input_folder, 'tile_%d.png'),  # Input pattern
-        '-c:v', 'libx265',  # Codec
-        '-preset', 'fast',  # Encoding speed (tradeoff between speed and compression)
-        '-x265-params', f'crf={crf_value}',  # CRF value for compression
-        output_file  # Output file
-    ]
-    # 264
+    ## H.265
+    # crf_value = 0 if lossless else crf  # CRF 0 means lossless, 28 is a good tradeoff for lossy
+    # command = [
+    #     'ffmpeg',
+    #     '-y',  # Overwrite output files without asking
+    #     '-i', os.path.join(input_folder, 'tile_%d.png'),  # Input pattern
+    #     '-c:v', 'libx265',  # Codec
+    #     '-preset', 'fast',  # Encoding speed (tradeoff between speed and compression)
+    #     '-x265-params', f'crf={crf_value}',  # CRF value for compression
+    #     output_file  # Output file
+    # ]
+
+    ## H.264
     # command = [
     #     'ffmpeg',
     #     '-y',  # Overwrite output files without asking
@@ -36,6 +38,18 @@ def compress_image(input_folder, output_file, lossless=True, crf = 28):
     #     '-x264-params', f'crf={crf_value}',  # CRF value for compression
     #     output_file  # Output file
     # ]
+
+    ## VVC
+    command = [
+        'vvencFFapp',
+        '-i', os.path.join(input_folder, 'tile_%d.png'),  # Input pattern
+        '-o', output_file,
+        '--preset', 'medium',
+        '--qp', '32',
+        '--input-bitdepth=8',
+        '--input-chroma-format=420',
+    ]
+
     subprocess.run(command, check=True)
 
 def get_folder_size(folder):
@@ -51,7 +65,7 @@ def main():
     output_folder = '../output'
     path = '../pictures/Canon-5DMarkII-Shotkit-4.CR2'
     crf = 0
-    
+
     splitter_main.run_image_splitter(path, output_folder)
 
     transformations = ['row_by_row', 'column_by_column', 'spiral', 'hilbert']
